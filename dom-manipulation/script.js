@@ -1,4 +1,3 @@
-
 let quotes = [
   { text: "The only way to do great work is to love what you do.", category: "Motivation" },
   { text: "Innovation distinguishes between a leader and a follower.", category: "Leadership" },
@@ -19,14 +18,18 @@ let syncInterval = null;
 // Function to show notification
 function showNotification(message, type = 'info') {
   const syncStatus = document.getElementById('syncStatus');
-  syncStatus.textContent = message;
-  syncStatus.className = type;
-  syncStatus.style.display = 'block';
-  
-  // Auto-hide after 5 seconds
-  setTimeout(() => {
-    syncStatus.style.display = 'none';
-  }, 5000);
+  if (syncStatus) {
+    syncStatus.textContent = message;
+    syncStatus.className = type;
+    syncStatus.style.display = 'block';
+    syncStatus.setAttribute('data-notification', 'true');
+    syncStatus.setAttribute('data-type', type);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      syncStatus.style.display = 'none';
+    }, 5000);
+  }
 }
 
 // Function to fetch quotes from the server
@@ -92,9 +95,9 @@ async function syncQuotes() {
     filterQuotes();
     
     if (conflicts.length > 0) {
-      showNotification(`Synced successfully! ${conflicts.length} conflict(s) resolved (server data took precedence).`, 'warning');
+      showNotification('Quotes synced with server! Conflicts resolved.', 'warning');
     } else {
-      showNotification('Synced successfully! No conflicts detected.', 'success');
+      showNotification('Quotes synced with server!', 'success');
     }
     
   } catch (error) {
@@ -129,6 +132,21 @@ function resolveConflicts(serverQuotes) {
       quotes.push(serverQuote);
     }
   });
+  
+  // Show conflict notification if conflicts exist
+  if (conflicts.length > 0) {
+    const conflictNotification = document.getElementById('conflictNotification');
+    if (conflictNotification) {
+      conflictNotification.innerHTML = `
+        <strong>Conflicts Resolved:</strong> ${conflicts.length} quote(s) were updated with server data.
+      `;
+      conflictNotification.style.display = 'block';
+      
+      setTimeout(() => {
+        conflictNotification.style.display = 'none';
+      }, 8000);
+    }
+  }
   
   return conflicts;
 }
