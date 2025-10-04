@@ -9,6 +9,133 @@ let quotes = [
   { text: "Believe you can and you're halfway there.", category: "Inspiration" }
 ];
 
+// Server URL - Using JSONPlaceholder for simulation
+const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+// Auto-sync interval ID
+let syncInterval = null;
+
+// Function to show notification
+function showNotification(message, type = 'info') {
+  const syncStatus = document.getElementById('syncStatus');
+  syncStatus.textContent = message;
+  syncStatus.className = type;
+  syncStatus.style.display = 'block';
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    syncStatus.style.display = 'none';
+  }, 5000);
+}
+
+// Function to sync quotes with server
+async function syncQuotes() {
+  try {
+    showNotification('Syncing with server...', 'info');
+    
+    // Fetch data from server
+    const response = await fetch(SERVER_URL);
+    const serverData = await response.json();
+    
+    // Simulate server quotes structure (JSONPlaceholder returns posts)
+    // In real scenario, this would be actual quote data
+    const serverQuotes = serverData.slice(0, 5).map(post => ({
+      text: post.title,
+      category: post.id % 2 === 0 ? 'Server' : 'API'
+    }));
+    
+    // Check for conflicts and resolve
+    const conflicts = resolveConflicts(serverQuotes);
+    
+    if (conflicts.length > 0) {
+      showNotification(`Synced successfully! ${conflicts.length} conflict(s) resolved (server data took precedence).`, 'warning');
+    } else {
+      showNotification('Synced successfully! No conflicts detected.', 'success');
+    }
+    
+    // Update local storage and UI
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+    
+  } catch (error) {
+    console.error('Sync error:', error);
+    showNotification('Failed to sync with server. Check your connection.', 'error');
+  }
+}
+
+// Function to resolve conflicts between local and server data
+function resolveConflicts(serverQuotes) {
+  const conflicts = [];
+  
+  // Strategy: Server data takes precedence
+  // Check if server quotes already exist locally
+  serverQuotes.forEach(serverQuote => {
+    const existingIndex = quotes.findIndex(q => 
+      q.text.toLowerCase() === serverQuote.text.toLowerCase()
+    );
+    
+    if (existingIndex !== -1) {
+      // Conflict detected: same text but possibly different category
+      if (quotes[existingIndex].category !== serverQuote.category) {
+        conflicts.push({
+          local: quotes[existingIndex],
+          server: serverQuote
+        });
+        // Server takes precedence
+        quotes[existingIndex] = serverQuote;
+      }
+    } else {
+      // New quote from server, add it
+      quotes.push(serverQuote);
+    }
+  });
+  
+  return conflicts;
+}
+
+// Function to post local quotes to server
+async function postQuotesToServer() {
+  try {
+    showNotification('Posting quotes to server...', 'info');
+    
+    // Simulate posting to server
+    const response = await fetch(SERVER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(quotes)
+    });
+    
+    const result = await response.json();
+    showNotification('Quotes posted to server successfully!', 'success');
+    console.log('Server response:', result);
+    
+  } catch (error) {
+    console.error('Post error:', error);
+    showNotification('Failed to post quotes to server.', 'error');
+  }
+}
+
+// Function to toggle auto-sync
+function toggleAutoSync() {
+  const autoSyncToggle = document.getElementById('autoSyncToggle');
+  
+  if (autoSyncToggle.checked) {
+    // Start auto-sync every 30 seconds
+    syncInterval = setInterval(syncQuotes, 30000);
+    showNotification('Auto-sync enabled (every 30 seconds)', 'success');
+  } else {
+    // Stop auto-sync
+    if (syncInterval) {
+      clearInterval(syncInterval);
+      syncInterval = null;
+    }
+    showNotification('Auto-sync disabled', 'info');
+  }
+}
+
 // Function to load quotes from local storage
 function loadQuotes() {
   const storedQuotes = localStorage.getItem('quotes');
@@ -84,10 +211,15 @@ function displayQuote(quote) {
   // Create paragraph element for quote text
   const quoteText = document.createElement('p');
   quoteText.textContent = quote.text;
+  quoteText.style.fontSize = '18px';
+  quoteText.style.fontWeight = 'bold';
+  quoteText.style.marginBottom = '10px';
   
   // Create paragraph element for quote category
   const quoteCategory = document.createElement('p');
   quoteCategory.textContent = `Category: ${quote.category}`;
+  quoteCategory.style.color = '#666';
+  quoteCategory.style.fontStyle = 'italic';
   
   // Append elements to quoteDisplay
   quoteDisplay.appendChild(quoteText);
@@ -136,7 +268,7 @@ function addQuote() {
   // Display the newly added quote
   displayQuote(newQuote);
   
-  alert('Quote added successfully!');
+  showNotification('Quote added successfully!', 'success');
 }
 
 // Function to export quotes to JSON file
@@ -195,7 +327,7 @@ function importFromJsonFile(event) {
       // Update categories dropdown with new categories
       populateCategories();
       
-      alert('Quotes imported successfully!');
+      showNotification('Quotes imported successfully!', 'success');
       
       // Show a random quote from the imported quotes
       showRandomQuote();
@@ -231,6 +363,15 @@ function initializeApp() {
     // Show a random quote based on current filter
     filterQuotes();
   }
+  
+  // Start auto-sync if enabled
+  const autoSyncToggle = document.getElementById('autoSyncToggle');
+  if (autoSyncToggle.checked) {
+    syncInterval = setInterval(syncQuotes, 30000);
+  }
+  
+  // Perform initial sync
+  syncQuotes();
 }
 
 // Event listener for the "Show New Quote" button
