@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,11 @@
 </head>
 <body>
   <h1>Dynamic Quote Generator</h1>
+  <!-- Category Filter -->
+  <select id="categoryFilter" onchange="filterQuotes()">
+    <option value="all">All Categories</option>
+    <!-- Dynamically populated categories -->
+  </select>
   <!-- Quote display -->
   <div id="quoteDisplay"></div>
   <!-- Button to show a new quote -->
