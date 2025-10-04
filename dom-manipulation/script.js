@@ -1,3 +1,4 @@
+
 let quotes = [
   { text: "The only way to do great work is to love what you do.", category: "Motivation" },
   { text: "Innovation distinguishes between a leader and a follower.", category: "Leadership" },
@@ -28,35 +29,73 @@ function showNotification(message, type = 'info') {
   }, 5000);
 }
 
-// Function to sync quotes with server
-async function syncQuotes() {
+// Function to fetch quotes from the server
+async function fetchQuotesFromServer() {
   try {
-    showNotification('Syncing with server...', 'info');
-    
-    // Fetch data from server
     const response = await fetch(SERVER_URL);
     const serverData = await response.json();
     
-    // Simulate server quotes structure (JSONPlaceholder returns posts)
-    // In real scenario, this would be actual quote data
+    // Transform server data to quotes format
     const serverQuotes = serverData.slice(0, 5).map(post => ({
       text: post.title,
       category: post.id % 2 === 0 ? 'Server' : 'API'
     }));
     
+    return serverQuotes;
+  } catch (error) {
+    console.error('Error fetching quotes from server:', error);
+    showNotification('Failed to fetch quotes from server.', 'error');
+    return [];
+  }
+}
+
+// Function to post quotes to the server
+async function postQuotesToServer(quotesToPost) {
+  try {
+    const response = await fetch(SERVER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(quotesToPost)
+    });
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error posting quotes to server:', error);
+    throw error;
+  }
+}
+
+// Function to sync quotes with server
+async function syncQuotes() {
+  try {
+    showNotification('Syncing with server...', 'info');
+    
+    // Fetch quotes from server
+    const serverQuotes = await fetchQuotesFromServer();
+    
+    if (serverQuotes.length === 0) {
+      showNotification('No data received from server.', 'warning');
+      return;
+    }
+    
     // Check for conflicts and resolve
     const conflicts = resolveConflicts(serverQuotes);
+    
+    // Update local storage with synced data
+    saveQuotes();
+    
+    // Update UI
+    populateCategories();
+    filterQuotes();
     
     if (conflicts.length > 0) {
       showNotification(`Synced successfully! ${conflicts.length} conflict(s) resolved (server data took precedence).`, 'warning');
     } else {
       showNotification('Synced successfully! No conflicts detected.', 'success');
     }
-    
-    // Update local storage and UI
-    saveQuotes();
-    populateCategories();
-    filterQuotes();
     
   } catch (error) {
     console.error('Sync error:', error);
@@ -94,21 +133,12 @@ function resolveConflicts(serverQuotes) {
   return conflicts;
 }
 
-// Function to post local quotes to server
-async function postQuotesToServer() {
+// Function to post local quotes to server (wrapper for UI button)
+async function postQuotesToServerUI() {
   try {
     showNotification('Posting quotes to server...', 'info');
     
-    // Simulate posting to server
-    const response = await fetch(SERVER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(quotes)
-    });
-    
-    const result = await response.json();
+    const result = await postQuotesToServer(quotes);
     showNotification('Quotes posted to server successfully!', 'success');
     console.log('Server response:', result);
     
