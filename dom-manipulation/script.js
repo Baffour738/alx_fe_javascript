@@ -199,8 +199,10 @@ function exportToJsonFile() {
   downloadLink.href = url;
   downloadLink.download = 'quotes.json';
   
-  // Trigger download
+  // Append to body, trigger download, then remove
+  document.body.appendChild(downloadLink);
   downloadLink.click();
+  document.body.removeChild(downloadLink);
   
   // Clean up the URL object
   URL.revokeObjectURL(url);
@@ -256,6 +258,7 @@ function importFromJsonFile(event) {
 function createExportButton() {
   const exportButton = document.createElement('button');
   exportButton.textContent = 'Export Quotes';
+  exportButton.id = 'exportQuotes';
   exportButton.onclick = exportToJsonFile;
   document.body.appendChild(exportButton);
 }
