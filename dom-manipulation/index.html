@@ -1,32 +1,114 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynamic Quote Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    #syncStatus {
+      background-color: #e3f2fd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 4px solid #2196F3;
+      display: none;
+    }
+    #syncStatus.success {
+      background-color: #e8f5e9;
+      border-left-color: #4CAF50;
+    }
+    #syncStatus.error {
+      background-color: #ffebee;
+      border-left-color: #f44336;
+    }
+    #syncStatus.warning {
+      background-color: #fff3e0;
+      border-left-color: #ff9800;
+    }
+    select, input, button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 14px;
+    }
+    #quoteDisplay {
+      background-color: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-height: 100px;
+    }
+    button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1976D2;
+    }
+    .sync-controls {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
   <h1>Dynamic Quote Generator</h1>
+  
+  <!-- Sync Status Notification -->
+  <div id="syncStatus"></div>
+  
+  <!-- Sync Controls -->
+  <div class="sync-controls">
+    <button onclick="syncQuotes()">Sync with Server</button>
+    <button onclick="postQuotesToServer()">Post Local Quotes to Server</button>
+    <label>
+      <input type="checkbox" id="autoSyncToggle" checked onchange="toggleAutoSync()">
+      Enable Auto-Sync (every 30 seconds)
+    </label>
+  </div>
+  
   <!-- Category Filter -->
   <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
     <!-- Dynamically populated categories -->
   </select>
+  
   <!-- Quote display -->
   <div id="quoteDisplay"></div>
+  
   <!-- Button to show a new quote -->
   <button id="newQuote">Show New Quote</button>
+  
   <!-- Form to add new quotes -->
   <div>
     <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
     <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
     <button id="addQuoteBtn">Add Quote</button>
   </div>
+  
   <!-- Export button -->
   <button onclick="exportToJsonFile()">Export Quotes</button>
+  
   <!-- Import file input -->
   <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+  
   <script src="script.js"></script>
 </body>
 </html>
