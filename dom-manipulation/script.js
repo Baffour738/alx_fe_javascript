@@ -1,4 +1,4 @@
-// Initial quotes array
+// Quotes array with objects containing text and category
 const quotes = [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "Life is what happens when you’re busy making other plans.", category: "Life" },
@@ -10,8 +10,8 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
 const addQuoteBtn = document.getElementById("addQuoteBtn");
 
-// Function to show a random quote
-function showRandomQuote() {
+// Function to display a random quote
+function displayRandomQuote() {
   if (quotes.length === 0) {
     quoteDisplay.textContent = "No quotes available. Add one!";
     return;
@@ -20,10 +20,10 @@ function showRandomQuote() {
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const quote = quotes[randomIndex];
 
-  // Clear old content
+  // Clear previous quote
   quoteDisplay.innerHTML = "";
 
-  // Create new elements dynamically
+  // Create elements dynamically
   const quoteText = document.createElement("p");
   quoteText.textContent = `"${quote.text}"`;
 
@@ -50,20 +50,20 @@ function addQuote() {
     return;
   }
 
-  // Add new quote to array
-  quotes.push({ text, category });
+  // Add new quote to the array (explicit object properties)
+  quotes.push({ text: text, category: category });
 
-  // Clear form inputs
+  // Clear input fields
   textInput.value = "";
   categoryInput.value = "";
 
-  // Show confirmation
-  alert("New quote added successfully!");
+  // Update DOM immediately
+  displayRandomQuote();
 }
 
 // Event listeners
-newQuoteBtn.addEventListener("click", showRandomQuote);
+newQuoteBtn.addEventListener("click", displayRandomQuote);
 addQuoteBtn.addEventListener("click", addQuote);
 
-// Show one quote on load
-showRandomQuote();
+// Show a random quote on initial load
+displayRandomQuote();
